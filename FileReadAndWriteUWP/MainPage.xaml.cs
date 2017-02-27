@@ -181,29 +181,29 @@ namespace FileReadAndWriteUWP
                 StreamReader(file);
                 //using (var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
                 //{
-                using (var inputStream = stream.GetInputStreamAt(0))
-                {
-                    using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
-                    {
-                        // The encoding and byte order need to match the settings of the writer we previously used.
-                        dataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
-                        dataReader.ByteOrder = Windows.Storage.Streams.ByteOrder.LittleEndian;
+                //    using (var inputStream = stream.GetInputStreamAt(0))
+                //    {
+                //        using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
+                //        {
+                //            // The encoding and byte order need to match the settings of the writer we previously used.
+                //            dataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+                //            dataReader.ByteOrder = Windows.Storage.Streams.ByteOrder.LittleEndian;
 
-                        // Once we have written the contents successfully we load the stream.
-                        await dataReader.LoadAsync((uint)stream.Size);
+                //            // Once we have written the contents successfully we load the stream.
+                //            await dataReader.LoadAsync((uint)stream.Size);
 
-                        var receivedStrings = "";
+                //            var receivedStrings = "";
 
-                        // Keep reading until we consume the complete stream.
-                        while (dataReader.UnconsumedBufferLength > 0)
-                        {
-                            // Note that the call to readString requires a length of "code units" to read. This
-                            // is the reason each string is preceded by its length when "on the wire".
-                            uint bytesToRead = dataReader.ReadUInt32();
-                            receivedStrings += dataReader.ReadString(bytesToRead) + "\n";
-                        }
-                    }
-                }
+                //            // Keep reading until we consume the complete stream.
+                //            while (dataReader.UnconsumedBufferLength > 0)
+                //            {
+                //                // Note that the call to readString requires a length of "code units" to read. This
+                //                // is the reason each string is preceded by its length when "on the wire".
+                //                uint bytesToRead = dataReader.ReadUInt32();
+                //                receivedStrings += dataReader.ReadString(bytesToRead) + "\n";
+                //            }
+                //        }
+                //    }
 
                 //}
             }
