@@ -108,7 +108,7 @@ namespace FileReadAndWriteUWP
 
         //Stream的写入操作
         //文件的Stream其实就是文件内的信息，所以再用Stream来写入文件的数据时，直接保存Stream的信息就可以，并不需要再调用文件的对象进行保存
-        public async void StreamWrite(IStorageFile file,string content)
+        public async void StreamWrite(IStorageFile file, string content)
         {
             int size = Int32.MaxValue;
             using (StorageStreamTransaction transaction = await file.OpenTransactedWriteAsync())
@@ -131,18 +131,82 @@ namespace FileReadAndWriteUWP
         //Buffer的操作不用调用LoadAsync方法，那是因为其已经一次性把数据都读取出来了
         public async void StreamReader(IStorageFile file)
         {
-            using(IRandomAccessStream readStream=await file.OpenAsync(FileAccessMode.Read))
+            using (IRandomAccessStream readStream = await file.OpenAsync(FileAccessMode.Read))
             {
-                using(DataReader dataReader=new DataReader(readStream))
+                using (DataReader dataReader = new DataReader(readStream))
                 {
                     //读取文件的相关信息，读取规则要与文件的规则一致
-                    await dataReader.LoadAsync(sizeof(Int32));
-                    Int32 stringSize = dataReader.ReadInt32();
-                    await dataReader.LoadAsync((UInt32)stringSize);
-                    string fileContent = dataReader.ReadString((uint)stringSize);
+                    //await dataReader.LoadAsync(sizeof(Int32));
+                    //Int32 stringSize = dataReader.ReadInt32();
+                    //await dataReader.LoadAsync(4096);
+                    //string fileContent = dataReader.ReadString((uint)stringSize);
+
+
+
+                    //add test code
+                    uint size = await dataReader.LoadAsync(sizeof(uint));
+                    if (size < sizeof(uint))
+                    {
+                        return;
+                    }
+                    else
+                    {
+                        uint stringLength = dataReader.ReadUInt32();
+                        uint actualStringLength = await dataReader.LoadAsync(stringLength);
+                        if (actualStringLength != stringLength)
+                        {
+                            // The underlying socket was closed before we were able to read the whole data
+                            return;
+                        }
+                    }
                 }
             }
+
         }
 
+        private async void Button_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker();
+            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
+            picker.SuggestedStartLocation =
+                Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            picker.FileTypeFilter.Add(".jpg");
+            picker.FileTypeFilter.Add(".jpeg");
+            picker.FileTypeFilter.Add(".png");
+            picker.FileTypeFilter.Add(".txt");
+
+            Windows.Storage.StorageFile file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                StreamReader(file);
+                //using (var stream = new Windows.Storage.Streams.InMemoryRandomAccessStream())
+                //{
+                using (var inputStream = stream.GetInputStreamAt(0))
+                {
+                    using (var dataReader = new Windows.Storage.Streams.DataReader(inputStream))
+                    {
+                        // The encoding and byte order need to match the settings of the writer we previously used.
+                        dataReader.UnicodeEncoding = Windows.Storage.Streams.UnicodeEncoding.Utf8;
+                        dataReader.ByteOrder = Windows.Storage.Streams.ByteOrder.LittleEndian;
+
+                        // Once we have written the contents successfully we load the stream.
+                        await dataReader.LoadAsync((uint)stream.Size);
+
+                        var receivedStrings = "";
+
+                        // Keep reading until we consume the complete stream.
+                        while (dataReader.UnconsumedBufferLength > 0)
+                        {
+                            // Note that the call to readString requires a length of "code units" to read. This
+                            // is the reason each string is preceded by its length when "on the wire".
+                            uint bytesToRead = dataReader.ReadUInt32();
+                            receivedStrings += dataReader.ReadString(bytesToRead) + "\n";
+                        }
+                    }
+                }
+
+                //}
+            }
+        }
     }
 }
